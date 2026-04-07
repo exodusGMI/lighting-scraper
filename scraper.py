@@ -193,7 +193,7 @@ def write_gateway_to_influx(data, gateway_id, write_api):
                         .field(key, num_value)
                     written_datapoints += 1  # Count written points
                     write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=point)
-    logging.info(f"Data written for {unit_name} (Gateway {gateway_id}).")
+    logging.info(f"Data written for {unit_name} (Gateway {gateway_id}) {timestamp}.")
 #####################################
 
 
@@ -225,7 +225,7 @@ def write_site_to_influx(data, site_id, write_api):
                         .field(key, num_value)
                     written_datapoints += 1
                     write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=point)
-    logging.info(f"Data written for site {site_id}.")
+    logging.info(f"Data written for site {site_id} {timestamp}.")
 #####################################
 
 
@@ -338,6 +338,7 @@ def add_month(date_value):
 ### Main loop ###
 def main():
     global token
+    logging.info("##################################################################")
     logging.info("Script started.")
     logging.info("Log level: %s", LOG_LEVEL)
     logging.info("FETCH_ENERGY_GROUP_DATA: %s", parse_env_bool(FETCH_ENERGY_GROUP_DATA))
