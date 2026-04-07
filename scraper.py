@@ -29,6 +29,7 @@ ENV_START_DATE = os.getenv("ENV_START_DATE")
 LOG_LEVEL = os.getenv("LOG_LEVEL")
 LOG_FILE = os.getenv("LOG_FILE")
 FETCH_ENERGY_GROUP_DATA = os.getenv("FETCH_ENERGY_GROUP_DATA")
+MAX_THREADS = int(os.getenv("MAX_THREADS", "1"))
 #####################################
 
 
@@ -361,7 +362,7 @@ def main():
         request_date = current_date.strftime("%Y-%m-%d")
         if SITE_ID:
             process_site(SITE_ID, write_api, request_date)
-        with ThreadPoolExecutor(max_workers=3) as executor:
+        with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
             futures = [executor.submit(process_gateway, gateway_id, write_api, request_date) for gateway_id in GATEWAY_IDS]
             for future in futures:
                 future.result()
