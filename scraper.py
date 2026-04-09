@@ -99,10 +99,18 @@ def get_bearer_token():
 
 
 ### Fetch energy data from gateway ###
-def fetch_energy_data(gateway_id, date):
+def fetch_energy_data(id, date, type):
     global token
     headers = {"Authorization": f"Bearer {token}"}
-    url = f"{BASE_URL}/en/api/v1/gateway/{gateway_id}/energy/month?date={date}"
+    if type == "gateway":
+        url = f"{BASE_URL}/en/api/v1/gateway/{id}/energy/month?date={date}"
+    elif type == "site":
+        url = f"{BASE_URL}/en/api/v1/site/{id}/energy/month?date={date}"
+    elif type == "group":
+        url = f"{BASE_URL}/en/api/v1/group/{id}/energy/month?date={date}"
+    else:
+        logging.error(f"Invalid type for fetch_energy_data: {type}")
+        return None
     data = request_with_retries(url, headers)
     if data is None and token:
         logging.info("Renewing token and retrying...")
@@ -112,21 +120,6 @@ def fetch_energy_data(gateway_id, date):
     return data
 #####################################
 
-
-
-### Fetch energy data from whole site ###
-def fetch_site_energy_data(site_id, date):
-    global token
-    headers = {"Authorization": f"Bearer {token}"}
-    url = f"{BASE_URL}/en/api/v1/site/{site_id}/energy/month?date={date}"
-    data = request_with_retries(url, headers)
-    if data is None and token:
-        logging.info("Renewing token and retrying...")
-        get_bearer_token()
-        headers = {"Authorization": f"Bearer {token}"}
-        data = request_with_retries(url, headers)
-    return data
-#####################################
 
 
 
@@ -138,19 +131,6 @@ def fetch_gateway_groups(gateway_id):
 #####################################
 
 
-
-### Fetch energy data from group ###
-def fetch_group_energy_data(group_id, date):
-    headers = {"Authorization": f"Bearer {token}"}
-    url = f"{BASE_URL}/en/api/v1/group/{group_id}/energy/month?date={date}"
-    data = request_with_retries(url, headers)
-    if data is None and token:
-        logging.info("Renewing token and retrying...")
-        get_bearer_token()
-        headers = {"Authorization": f"Bearer {token}"}
-        data = request_with_retries(url, headers)
-    return data
-#####################################
 
 
 
@@ -268,7 +248,7 @@ def write_group_to_influx(data, gateway_id, group_name, group_address, write_api
 
 ### Process gateway and its groups ###
 def process_gateway(gateway_id, write_api, date):
-    data = fetch_energy_data(gateway_id, date)
+    data = fetch_energy_data(gateway_id, date, "gateway")
     if data:
         write_gateway_to_influx(data, gateway_id, write_api)
 
@@ -282,7 +262,7 @@ def process_gateway(gateway_id, write_api, date):
             group_id = group["id"]
             group_name = group["name"]
             group_address = group["group_address"]
-            group_data = fetch_group_energy_data(group_id, date)
+            group_data = fetch_energy_data(group_id, date, "group")
             if group_data:
                 write_group_to_influx(group_data, gateway_id, group_name, group_address, write_api)
 #####################################
@@ -291,7 +271,7 @@ def process_gateway(gateway_id, write_api, date):
 
 ### Process whole site ###
 def process_site(site_id, write_api, date):
-    data = fetch_site_energy_data(site_id, date)
+    data = fetch_energy_data(site_id, date, "site")
     if data:
         write_site_to_influx(data, site_id, write_api)
 #####################################
