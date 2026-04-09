@@ -30,6 +30,9 @@ LOG_LEVEL = os.getenv("LOG_LEVEL")
 LOG_FILE = os.getenv("LOG_FILE")
 FETCH_ENERGY_GROUP_DATA = os.getenv("FETCH_ENERGY_GROUP_DATA")
 MAX_THREADS = int(os.getenv("MAX_THREADS", "1"))
+NOTIFYONSUCCESS = (os.getenv("NOTIFYONSUCCESS"))
+GOTIFY_SERVER = os.getenv("GOTIFY_SERVER")
+GOTIFY_TOKEN = os.getenv("GOTIFY_TOKEN")
 #####################################
 
 
@@ -325,7 +328,7 @@ def main():
     token = get_bearer_token()
     if not token:
         logging.error("Exiting script: No token received.")
-        return
+        sys.exit(1)
 
  
     start_date = parse_env_date(ENV_START_DATE)
@@ -333,7 +336,7 @@ def main():
         start_date = first_day_of_month(datetime.date.today())
     if not start_date:
         logging.error("Exiting script: No start date configured.")
-        return
+        sys.exit(1)
     client = influxdb_client.InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
     write_api = client.write_api(write_options=SYNCHRONOUS)
     
@@ -356,6 +359,22 @@ def main():
     logging.info(f"Runtime: {runtime:.2f} seconds")
     logging.info(f"Total API requests: {api_request_count}")
     logging.info(f"Total data points written: {written_datapoints}")
+    
+    if parse_env_bool(NOTIFYONSUCCESS) == True:
+        try:
+            requests.post(
+                f"{GOTIFY_SERVER}message?token={GOTIFY_TOKEN}",
+                data={
+                    "title": "SCC Scraper OK",
+                    "message": f"Runtime: {runtime:.2f}s\nDatapoints: {written_datapoints}\nStarted on: {start_date}",
+                    "priority": 1
+                }
+            )
+            logging.info("Success notification sent.")
+        except Exception:
+            logging.error("Failed to send success notification.")
+    else:
+        logging.debug("Success notification skipped due to configuration.")
 
 if __name__ == "__main__":
     main()
