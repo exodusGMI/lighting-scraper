@@ -33,10 +33,16 @@ MAX_THREADS = int(os.getenv("MAX_THREADS", "1"))
 NOTIFYONSUCCESS = (os.getenv("NOTIFYONSUCCESS"))
 GOTIFY_SERVER = os.getenv("GOTIFY_SERVER")
 GOTIFY_TOKEN = os.getenv("GOTIFY_TOKEN")
+ENABLE_GOTIFY = os.getenv("ENABLE_GOTIFY")
 #####################################
 
 
-
+### Parse strings from .env to bool ###
+def parse_env_bool(value):
+    if value is None:
+        return False
+    return str(value).strip().lower() in {"1", "true", "yes", "y"}
+#####################################
 
 ### Configure logging ###
 
@@ -52,7 +58,11 @@ def configure_logging():
 
 
 configure_logging()
-logging.info("started")
+logging.info("##################################################################")
+logging.info(f"Log level set to: {LOG_LEVEL}")
+logging.debug(f"Gotify notifications enabled: {parse_env_bool(ENABLE_GOTIFY)}")
+logging.debug(f"Fetch energy group data: {parse_env_bool(FETCH_ENERGY_GROUP_DATA)}")
+
 #####################################
 
 
@@ -281,12 +291,7 @@ def process_site(site_id, write_api, date):
 
 
 
-### Parse strings from .env to bool ###
-def parse_env_bool(value):
-    if value is None:
-        return False
-    return str(value).strip().lower() in {"1", "true", "yes", "y"}
-#####################################
+
 
 
 
@@ -323,8 +328,6 @@ def main():
     global token
     logging.info("##################################################################")
     logging.info("Script started.")
-    logging.info("Log level: %s", LOG_LEVEL)
-    logging.info("FETCH_ENERGY_GROUP_DATA: %s", parse_env_bool(FETCH_ENERGY_GROUP_DATA))
     token = get_bearer_token()
     if not token:
         logging.error("Exiting script: No token received.")
@@ -360,7 +363,7 @@ def main():
     logging.info(f"Total API requests: {api_request_count}")
     logging.info(f"Total data points written: {written_datapoints}")
     
-    if parse_env_bool(NOTIFYONSUCCESS) == True:
+    if parse_env_bool(NOTIFYONSUCCESS) == True & parse_env_bool(ENABLE_GOTIFY) == True:
         try:
             requests.post(
                 f"{GOTIFY_SERVER}message?token={GOTIFY_TOKEN}",
