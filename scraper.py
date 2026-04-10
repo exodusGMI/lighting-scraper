@@ -369,7 +369,7 @@ def main():
                 f"{GOTIFY_SERVER}message?token={GOTIFY_TOKEN}",
                 data={
                     "title": "SCC Scraper OK",
-                    "message": f"Runtime: {runtime:.2f}s\nDatapoints: {written_datapoints}\nStarted on: {start_date}",
+                    "message": f"Runtime: {runtime:.2f}s\nDatapoints: {written_datapoints}\nStarted on: {start_date}\nAPI Requests: {api_request_count}",
                     "priority": 1
                 }
             )
