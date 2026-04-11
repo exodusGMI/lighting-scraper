@@ -231,7 +231,8 @@ def write_group_to_influx(data, gateway_id, group_name, group_address, write_api
         period_totals = data["periodTotals"]
         point = influxdb_client.Point("group_energy_summary") \
             .tag("gateway_id", str(gateway_id)) \
-            .tag("unit_name", unit_name) 
+            .tag("unit_name", unit_name) \
+            .time(timestamp)
         for key, value in period_totals.items():
             num_value = safe_float(value)
             if num_value is not None:
@@ -254,7 +255,7 @@ def write_group_to_influx(data, gateway_id, group_name, group_address, write_api
                         .field(key, num_value)
                     written_datapoints += 1  # Count written points
                     write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=point)
-    logging.info(f"Data written for {unit_name} (Gateway {gateway_id} : Group {group_name}) {timestamp}.")
+    logging.debug(f"Data written for {unit_name} (Gateway {gateway_id} : Group {group_name}) {timestamp}.")
 #####################################
 
 
